@@ -120,7 +120,7 @@ const AirQualityChart = ({ data, compareData, metric, color, unit, label, theme 
     datasets.push({
       label: label,
       data: data.map(item => ({
-        x: item.timestamp,
+        x: new Date(item.timestamp),
         y: item[metric],
       })),
       borderColor: color,
@@ -264,10 +264,15 @@ const AirQualityChart = ({ data, compareData, metric, color, unit, label, theme 
         type: hasComparison ? 'linear' : 'time',
         time: !hasComparison ? {
           displayFormats: {
+            millisecond: 'HH:mm:ss',
+            second: 'HH:mm:ss',
             minute: 'HH:mm',
             hour: 'HH:mm',
             day: 'MMM dd',
+            week: 'MMM dd',
+            month: 'MMM yyyy',
           },
+          tooltipFormat: 'MMM dd, yyyy HH:mm:ss',
         } : undefined,
         grid: {
           display: true,
@@ -276,19 +281,22 @@ const AirQualityChart = ({ data, compareData, metric, color, unit, label, theme 
           borderWidth: 2,
           lineWidth: 1,
         },
-        ticks: {
+        ticks: hasComparison ? {
           color: tickColor,
           font: {
             size: 11,
           },
           callback: function(value) {
-            if (hasComparison) {
-              // Convert milliseconds to hours for comparison mode
-              const hours = Math.floor(value / (1000 * 60 * 60));
-              const minutes = Math.floor((value % (1000 * 60 * 60)) / (1000 * 60));
-              return `${hours}h ${minutes}m`;
-            }
-            return value;
+            // Convert milliseconds to time format (HH:MM)
+            const totalMinutes = Math.floor(value / (1000 * 60));
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+          },
+        } : {
+          color: tickColor,
+          font: {
+            size: 11,
           },
         },
         title: {
